@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures=["relationJoins"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model mdb_all_permissions {
+  permissionId                Int                           @id @default(autoincrement())
+  permissionName              String                        @unique(map: "permissionName") @db.VarChar(50)
+  mdb_default_role_permission mdb_default_role_permission[]
+  mdb_user_permissions        mdb_user_permissions[]
+}
+
+model mdb_all_roles {
+  roleId                      Int                           @id @default(autoincrement())
+  roleName                    String                        @unique(map: "roleName") @db.VarChar(50)
+  mdb_default_role_permission mdb_default_role_permission[]
+  mdb_user_role               mdb_user_role[]
+}
+
+model mdb_default_role_permission {
+  roleId              Int
+  permissionId        Int
+  mdb_all_roles       mdb_all_roles       @relation(fields: [roleId], references: [roleId], onDelete: NoAction, onUpdate: NoAction, map: "mdb_default_role_permission_ibfk_1")
+  mdb_all_permissions mdb_all_permissions @relation(fields: [permissionId], references: [permissionId], onDelete: NoAction, onUpdate: NoAction, map: "mdb_default_role_permission_ibfk_2")
+
+  @@id([roleId, permissionId])
+  @@index([permissionId], map: "permissionId")
+}
+
+model mdb_user_permissions {
+  userId              Int
+  permissionId        Int
+  mdb_users           mdb_users           @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "mdb_user_permissions_ibfk_1")
+  mdb_all_permissions mdb_all_permissions @relation(fields: [permissionId], references: [permissionId], onDelete: NoAction, onUpdate: NoAction, map: "mdb_user_permissions_ibfk_2")
+
+  @@id([userId, permissionId])
+  @@index([permissionId], map: "permissionId")
+}
+
+model mdb_user_role {
+  userId        Int            @id
+  roleId        Int?
+  mdb_users     mdb_users      @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "mdb_user_role_ibfk_1")
+  mdb_all_roles mdb_all_roles? @relation(fields: [roleId], references: [roleId], onDelete: NoAction, onUpdate: NoAction, map: "mdb_user_role_ibfk_2")
+
+  @@index([roleId], map: "roleId")
+}
+
+model mdb_users {
+  userId               Int                    @id @default(autoincrement())
+  email                String                 @unique(map: "email") @db.VarChar(50)
+  password             String                 @db.VarChar(255)
+  salt                 String                 @db.VarChar(255)
+  isActive             Boolean?
+  createdAt            DateTime?              @default(now()) @db.Timestamp(0)
+  updatedAt            DateTime?              @default(now()) @db.Timestamp(0)
+  mdb_user_permissions mdb_user_permissions[]
+  mdb_user_role        mdb_user_role?
+}
+
+model Session {
+  id        String   @id
+  sid       String   @unique
+  data      String
+  expiresAt   DateTime
+}
