@@ -9,7 +9,7 @@ class IsAuthorized {
     next: NextFunction
   ) => {
     if (req.user) {
-      const { permission } = req.user as USERI;
+      const { permission } = req.user;
       if (!permission.some(({ permissionId }) => permissionId === 1)) {
         const { create } = new ErrorResponseFactory();
         const { error } = create("insufficient priviledges", 403);
