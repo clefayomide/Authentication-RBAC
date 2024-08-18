@@ -4,9 +4,11 @@ import { validateHash } from "../cryptography/index";
 import { ErrorResponseFactory } from "../../factory/ErrorFactory";
 import { CustomError } from "../custom/errorConstructor";
 import { UserService } from "../../services";
+import { LoggedInUserI } from "../../types";
 
 passport.serializeUser(function (user, callback) {
-  callback(null, user.userId);
+  const userToSerialize = user as LoggedInUserI;
+  callback(null, userToSerialize.userId);
 });
 
 passport.deserializeUser(async function (id: number, callback) {
@@ -22,6 +24,7 @@ passport.deserializeUser(async function (id: number, callback) {
 
 async function verify(email: string, password: string, callback: any) {
   const { getUser, setLoggedInUserData } = new UserService();
+
   try {
     const user = await getUser({ email });
     const { create } = new ErrorResponseFactory();
